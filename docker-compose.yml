@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: messages-postgres
+    environment:
+      POSTGRES_DB: messages_db
+      POSTGRES_USER: messages_app
+      POSTGRES_PASSWORD: messages_app
+    ports:
+      # 5434 на хосте, чтобы не спорить с users_db и локальным PostgreSQL
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U messages_app -d messages_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - messages_pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: messages-service
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_R2DBC_URL: r2dbc:postgresql://db:5432/messages_db
+      DB_JDBC_URL: jdbc:postgresql://db:5432/messages_db
+      DB_USER: messages_app
+      DB_PASSWORD: messages_app
+      JWT_SECRET: dev-only-secret-change-me-0123456789abcdef
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL:-http://host.docker.internal:9000}
+    ports:
+      - "9001:9001"
+
+volumes:
+  messages_pgdata:

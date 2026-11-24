@@ -1,0 +1,43 @@
+server:
+  port: ${SERVER_PORT:9001}
+
+spring:
+  application:
+    name: messages-service
+
+  r2dbc:
+    url: ${DB_R2DBC_URL:r2dbc:postgresql://localhost:5432/messages_db}
+    username: ${DB_USER:messages_app}
+    password: ${DB_PASSWORD:messages_app}
+    pool:
+      enabled: true
+      initial-size: 3
+      max-size: 10
+      max-idle-time: 30m
+
+  flyway:
+    enabled: true
+    url: ${DB_JDBC_URL:jdbc:postgresql://localhost:5432/messages_db}
+    user: ${DB_USER:messages_app}
+    password: ${DB_PASSWORD:messages_app}
+    locations: classpath:db/migration
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-0123456789abcdef}
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000,http://localhost:5173}
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+  users-service:
+    url: ${USERS_SERVICE_URL:http://localhost:9000}
+    timeout: PT3S
+
+logging:
+  level:
+    ru.urfu.messages: INFO
+    org.springframework.r2dbc: WARN
